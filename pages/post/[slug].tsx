@@ -1,14 +1,38 @@
 import { GetStaticProps } from 'next';
-import Header from '../../components/Header';
-import { sanityClient, urlFor } from '../../sanity';
-import { Post } from '../../typings';
 import PortableText from 'react-portable-text';
+import { sanityClient, urlFor } from '../../sanity';
+import { useForm, SubmitHandler } from 'react-hook-form';
+
+import Header from '../../components/Header';
+import { Post } from '../../typings';
+
+interface IFormInput {
+  _id: string;
+  name: string;
+  email: string;
+  comment: string;
+}
 
 interface Props {
   post: Post;
 }
 
 const SinglePost = ({ post }: Props) => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<IFormInput>();
+
+  const onSubmit: SubmitHandler<IFormInput> = async (data) => {
+    await fetch('/api/createComment', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+      .then((res) => console.log(res))
+      .catch((err) => console.log(err));
+  };
+
   return (
     <main>
       <Header />
@@ -64,14 +88,20 @@ const SinglePost = ({ post }: Props) => {
 
       <hr className="max-w-lg my-5 mx-auto border border-yellow-500" />
 
-      <form className="flex flex-col p-5 my-10 max-w-2xl mx-auto mb-10">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="flex flex-col p-5 my-10 max-w-2xl mx-auto mb-10"
+      >
         <h3 className="text-sm text-yellow-500">Enjoyed this article?</h3>
         <h3 className="text-3xl font-bold">Leave a comment below!</h3>
         <hr className="py-3 mt-2" />
 
+        <input {...register('_id')} type="hidden" name="_id" value={post._id} />
+
         <label className="mb-5">
           <span className="text-gray-700">Name</span>
           <input
+            {...register('name', { required: true })}
             className="shadow border rounded py-2 px-3 form-input mt-1 block w-full outline-none ring-yellow-500 focus:ring"
             type="text"
             placeholder="enter your name"
@@ -80,6 +110,7 @@ const SinglePost = ({ post }: Props) => {
         <label className="mb-5">
           <span className="text-gray-700">Email</span>
           <input
+            {...register('email', { required: true })}
             className="shadow border rounded py-2 px-3 form-input mt-1 block w-full outline-none ring-yellow-500 focus:ring"
             type="email"
             placeholder="enter your email"
@@ -88,10 +119,28 @@ const SinglePost = ({ post }: Props) => {
         <label className="mb-5">
           <span className="text-gray-700">Comment</span>
           <textarea
+            {...register('comment', { required: true })}
             className="shadow border rounded py-2 px-3 form-textarea mt-1 block w-full outline-none ring-yellow-500 focus:ring"
             rows={8}
           />
         </label>
+
+        {/* errors will return when field validation fails  */}
+        <div className="flex flex-col p-5">
+          {errors.name && (
+            <span className="text-red-500">- This field is required</span>
+          )}
+          {errors.email && (
+            <span className="text-red-500">- This field is required</span>
+          )}
+          {errors.comment && (
+            <span className="text-red-500">- This field is required</span>
+          )}
+        </div>
+        <input
+          type="submit"
+          className="shadow bg-yellow-500 hover:bg-yellow-400 focus:shadow-outline focus:outline-none text-white font-bold py-2 px-4 cursor-pointer"
+        />
       </form>
     </main>
   );
