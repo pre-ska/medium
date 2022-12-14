@@ -1,5 +1,7 @@
 # Medium site
 
+## React, Typescript
+
 [DEMO](https://preska-medium3.netlify.app/)
 
 <p align="center">
